@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h2>Local XSS Demo (Lab Only)</h2>
+    <form id="frm">
+      Enter text: <input id="user" name="user" />
+      <button type="button" onclick="show()">Submit</button>
+    </form>
+
+    <h3>Result (unsanitized output)</h3>
+    <div id="output"></div>
+
+    <script>
+      function show() {
+        const v = document.getElementById("user").value;
+        // intentionally insecure: directly inserts user input into DOM
+        document.getElementById("output").innerHTML = v;
+      }
+    </script>
+  </body>
+</html>
