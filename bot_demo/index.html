@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot detection · live demo</title>
+  <!-- Font & minimal reset -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(145deg, #f6f9fc 0%, #e9f1f8 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      padding: 1.5rem;
+      margin: 0;
+    }
+
+    .card {
+      max-width: 640px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 48px;
+      padding: 2.5rem 2.8rem;
+      box-shadow: 0 20px 40px -12px rgba(0, 20, 30, 0.25),
+                  inset 0 1px 2px rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.5);
+      transition: 0.2s;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #0b1e2b;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.25rem;
+    }
+
+    .subhead {
+      color: #2c4a5e;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #3b82f6;
+      padding-left: 1rem;
+      background: rgba(59, 130, 246, 0.04);
+      border-radius: 0 12px 12px 0;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: #1f3a4b;
+      margin-bottom: 0.3rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: white;
+      border-radius: 24px;
+      border: 1.5px solid #dbe4ed;
+      transition: 0.15s;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .input-wrapper:focus-within {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      border: none;
+      background: transparent;
+      font-size: 1rem;
+      font-weight: 450;
+      color: #0f293b;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .input-wrapper input::placeholder {
+      color: #9bb1c2;
+      font-weight: 350;
+    }
+
+    .input-wrapper .icon {
+      padding: 0 0 0 1rem;
+      color: #5b7b92;
+      font-size: 1.1rem;
+      opacity: 0.7;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #4d6f86;
+      margin-top: 0.4rem;
+      padding-left: 0.5rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 2.2rem 0 1.8rem;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      background: white;
+      padding: 0.8rem 1.8rem;
+      border-radius: 60px;
+      font-weight: 550;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.15s;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
+      border: 1px solid #dae2ec;
+      color: #1e3b4f;
+      background: #ffffffcc;
+      backdrop-filter: blur(4px);
+      flex: 1 1 auto;
+    }
+
+    .btn-primary {
+      background: #1e3b4f;
+      border: 1px solid #1e3b4f;
+      color: white;
+      box-shadow: 0 8px 16px -8px rgba(20, 60, 90, 0.25);
+    }
+    .btn-primary:hover {
+      background: #14303f;
+      transform: scale(0.97);
+    }
+
+    .btn-bot {
+      background: #d32f2f;
+      border: 1px solid #b71c1c;
+      color: white;
+      box-shadow: 0 8px 16px -8px rgba(180, 30, 30, 0.3);
+    }
+    .btn-bot:hover {
+      background: #b71c1c;
+      transform: scale(0.97);
+    }
+
+    .btn:active {
+      transform: scale(0.94);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      pointer-events: none;
+      filter: grayscale(0.3);
+    }
+
+    .status-box {
+      background: #eef5fa;
+      border-radius: 32px;
+      padding: 1.2rem 1.8rem;
+      margin-top: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid #d1e0eb;
+      backdrop-filter: blur(2px);
+      transition: 0.2s;
+    }
+
+    .status-badge {
+      font-weight: 600;
+      padding: 0.25rem 1rem;
+      border-radius: 40px;
+      background: #b7cdde;
+      color: #0b2a3b;
+      font-size: 0.8rem;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .status-badge.human {
+      background: #2e7d32;
+      color: white;
+    }
+    .status-badge.bot {
+      background: #c62828;
+      color: white;
+    }
+
+    .status-message {
+      font-weight: 450;
+      color: #0a2637;
+      flex: 1;
+    }
+
+    .footnote {
+      margin-top: 1.8rem;
+      font-size: 0.8rem;
+      color: #3d6077;
+      text-align: center;
+      border-top: 1px dashed #c7dae7;
+      padding-top: 1.5rem;
+      letter-spacing: 0.01em;
+    }
+
+    .footnote span {
+      background: #e3edf5;
+      padding: 0.1rem 0.8rem;
+      border-radius: 30px;
+    }
+
+    /* live bot animation highlight */
+    .input-wrapper.bot-active {
+      border-color: #d32f2f;
+      background: #fff5f5;
+      transition: 0.2s;
+    }
+    .input-wrapper.bot-active input {
+      color: #a11f1f;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 1.8rem; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" role="main">
+  <h1>
+    <span>🤖</span> Bot detection
+  </h1>
+  <div class="subhead">
+    ⚡ Fill the form normally → <strong>human</strong> ·  
+    press “Bot fill” → watch the bot type live
+  </div>
+
+  <!-- Form -->
+  <form id="detectionForm" autocomplete="off">
+    <div class="form-group">
+      <label for="fullName">Full name</label>
+      <div class="input-wrapper" id="nameWrapper">
+        <span class="icon">👤</span>
+        <input type="text" id="fullName" placeholder="e.g. Alex Rivera" value="">
+      </div>
+      <div class="hint">✏️ type manually or watch the bot</div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email address</label>
+      <div class="input-wrapper" id="emailWrapper">
+        <span class="icon">✉️</span>
+        <input type="email" id="email" placeholder="hello@domain.com" value="">
+      </div>
+      <div class="hint">📧 bot will type character by character</div>
+    </div>
+
+    <div class="form-group">
+      <label for="message">Short message</label>
+      <div class="input-wrapper" id="msgWrapper">
+        <span class="icon">💬</span>
+        <input type="text" id="message" placeholder="Your message here..." value="">
+      </div>
+    </div>
+  </form>
+
+  <!-- Action Buttons -->
+  <div class="actions">
+    <button class="btn btn-primary" id="humanCheckBtn" type="button">
+      <span>✅</span> Check as human
+    </button>
+    <button class="btn btn-bot" id="botFillBtn" type="button">
+      <span>🤖</span> Bot fill (live)
+    </button>
+    <button class="btn" id="resetBtn" type="button">
+      <span>↺</span> Reset
+    </button>
+  </div>
+
+  <!-- Status display -->
+  <div class="status-box" id="statusBox">
+    <span class="status-badge" id="statusBadge">⏳ idle</span>
+    <span class="status-message" id="statusMessage">Fill the form or trigger the bot</span>
+  </div>
+
+  <div class="footnote">
+    <span>⚡ bot types in real time · inputs highlight in red</span>
+  </div>
+</div>
+
+<script>
+  (function() {
+    "use strict";
+
+    // DOM references
+    const nameInput = document.getElementById('fullName');
+    const emailInput = document.getElementById('email');
+    const msgInput = document.getElementById('message');
+    const nameWrapper = document.getElementById('nameWrapper');
+    const emailWrapper = document.getElementById('emailWrapper');
+    const msgWrapper = document.getElementById('msgWrapper');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusMessage = document.getElementById('statusMessage');
+    const humanBtn = document.getElementById('humanCheckBtn');
+    const botBtn = document.getElementById('botFillBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // state
+    let botRunning = false;
+    let botTimer = null;
+    let botFields = [];      // queue of { field, value, wrapper, input }
+    let botStepIndex = 0;
+
+    // ---------- helpers ----------
+    function setStatus(type, msg) {
+      // type: 'human', 'bot', 'idle', 'info'
+      statusBadge.className = 'status-badge';
+      if (type === 'human') {
+        statusBadge.classList.add('human');
+        statusBadge.textContent = '🧑 human';
+      } else if (type === 'bot') {
+        statusBadge.classList.add('bot');
+        statusBadge.textContent = '🤖 bot';
+      } else if (type === 'idle') {
+        statusBadge.textContent = '⏳ idle';
+      } else {
+        statusBadge.textContent = 'ℹ️ info';
+      }
+      statusMessage.textContent = msg;
+    }
+
+    // clear bot highlights
+    function clearBotHighlights() {
+      nameWrapper.classList.remove('bot-active');
+      emailWrapper.classList.remove('bot-active');
+      msgWrapper.classList.remove('bot-active');
+    }
+
+    // reset form fields (empty) and reset status
+    function resetForm(keepStatus = false) {
+      // cancel any running bot
+      if (botTimer) {
+        clearTimeout(botTimer);
+        botTimer = null;
+      }
+      botRunning = false;
+      botStepIndex = 0;
+      botFields = [];
+      clearBotHighlights();
+
+      nameInput.value = '';
+      emailInput.value = '';
+      msgInput.value = '';
+
+      if (!keepStatus) {
+        setStatus('idle', 'Form cleared · ready');
+      }
+      // enable buttons
+      humanBtn.disabled = false;
+      botBtn.disabled = false;
+    }
+
+    // ---------- human check ----------
+    function checkHuman() {
+      if (botRunning) {
+        setStatus('info', '⏳ Bot is running, wait or reset');
+        return;
+      }
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const msg = msgInput.value.trim();
+
+      if (!name && !email && !msg) {
+        setStatus('info', '📭 Fill at least one field to verify');
+        return;
+      }
+
+      // simple heuristic: if all fields are non‑empty and look "normal"
+      const isHuman = (name.length > 1 || email.length > 3 || msg.length > 1);
+      if (isHuman) {
+        setStatus('human', '✅ Looks like a human — fields filled manually');
+      } else {
+        setStatus('bot', '⚠️ Suspicious: empty or too short (bot-like)');
+      }
+    }
+
+    // ---------- BOT FILL (live) ----------
+    function startBotFill() {
+      // clear any previous bot state
+      if (botTimer) {
+        clearTimeout(botTimer);
+        botTimer = null;
+      }
+      botRunning = false;
+      botStepIndex = 0;
+      clearBotHighlights();
+
+      // prepare fields with values (bot data)
+      const botData = [
+        { 
+          field: nameInput, 
+          wrapper: nameWrapper, 
+          value: 'Bot_Test_User',
+          label: 'name'
+        },
+        { 
+          field: emailInput, 
+          wrapper: emailWrapper, 
+          value: 'bot@demo-fill.com',
+          label: 'email'
+        },
+        { 
+          field: msgInput, 
+          wrapper: msgWrapper, 
+          value: 'I was filled by a bot 🤖',
+          label: 'message'
+        }
+      ];
+
+      // reset fields before bot fill
+      nameInput.value = '';
+      emailInput.value = '';
+      msgInput.value = '';
+
+      // build queue: each field will be typed char by char
+      botFields = [];
+      botData.forEach((item) => {
+        const chars = item.value.split('');
+        // we push each character as a separate step, plus a special 'focus' and 'done'
+        botFields.push({ type: 'focus', wrapper: item.wrapper, field: item.field });
+        for (let i = 0; i < chars.length; i++) {
+          botFields.push({ 
+            type: 'char', 
+            field: item.field, 
+            char: chars[i],
+            wrapper: item.wrapper
+          });
+        }
+        // after last char, add a small highlight removal step (but we'll clear at end)
+      });
+      // add final cleanup step (remove highlights)
+      botFields.push({ type: 'cleanup' });
+
+      // disable buttons during bot run
+      humanBtn.disabled = true;
+      botBtn.disabled = true;
+      botRunning = true;
+      botStepIndex = 0;
+      setStatus('bot', '🤖 Bot is typing... watch live');
+
+      // start the step‑by‑step bot
+      runBotStep();
+    }
+
+    function runBotStep() {
+      if (!botRunning) {
+        // if reset was called, stop
+        return;
+      }
+
+      if (botStepIndex >= botFields.length) {
+        // finished
+        botRunning = false;
+        humanBtn.disabled = false;
+        botBtn.disabled = false;
+        clearBotHighlights();
+        setStatus('bot', '🤖 Bot finished filling — press "Check as human" to verify');
+        return;
+      }
+
+      const step = botFields[botStepIndex];
+      botStepIndex++;
+
+      // execute step
+      switch (step.type) {
+        case 'focus': {
+          // highlight wrapper and focus input (visually)
+          clearBotHighlights();
+          step.wrapper.classList.add('bot-active');
+          step.field.focus();
+          // schedule next step
+          botTimer = setTimeout(() => { runBotStep(); }, 80); // smooth
+          break;
+        }
+        case 'char': {
+          // append character to field
+          const current = step.field.value;
+          step.field.value = current + step.char;
+          // trigger input event (so any listener would see it)
+          step.field.dispatchEvent(new Event('input', { bubbles: true }));
+          // highlight wrapper (keep active)
+          step.wrapper.classList.add('bot-active');
+          // next step after 50~80ms (live effect)
+          botTimer = setTimeout(() => { runBotStep(); }, 60 + Math.floor(Math.random() * 40));
+          break;
+        }
+        case 'cleanup': {
+          clearBotHighlights();
+          // remove focus from fields
+          if (document.activeElement) {
+            document.activeElement.blur();
+          }
+          // final status
+          botRunning = false;
+          humanBtn.disabled = false;
+          botBtn.disabled = false;
+          setStatus('bot', '🤖 Bot done — all fields filled. Press "Check as human"');
+          botTimer = null;
+          break;
+        }
+        default: {
+          // fallback
+          botTimer = setTimeout(() => { runBotStep(); }, 50);
+        }
+      }
+    }
+
+    // ---------- event binding ----------
+    humanBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (botRunning) {
+        setStatus('info', '⏳ Bot is busy, wait or reset');
+        return;
+      }
+      checkHuman();
+    });
+
+    botBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (botRunning) {
+        setStatus('info', '⏳ Bot already running, reset first');
+        return;
+      }
+      // reset form but keep a clean state (no status change)
+      resetForm(true);
+      // start bot fill
+      startBotFill();
+    });
+
+    resetBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      // cancel bot
+      if (botTimer) {
+        clearTimeout(botTimer);
+        botTimer = null;
+      }
+      botRunning = false;
+      humanBtn.disabled = false;
+      botBtn.disabled = false;
+      clearBotHighlights();
+      resetForm(false);
+      // blur any active field
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+      setStatus('idle', 'Reset · ready');
+    });
+
+    // manual typing detection: if user types in any field, clear bot highlight (optional)
+    [nameInput, emailInput, msgInput].forEach((input) => {
+      input.addEventListener('input', function() {
+        if (botRunning) return; // if bot is active, don't interfere
+        // remove bot-active class from its wrapper
+        const wrapper = this.closest('.input-wrapper');
+        if (wrapper) {
+          wrapper.classList.remove('bot-active');
+        }
+        // if user types manually, we can set status to idle (optional)
+        // but we don't want to override bot detection status
+        const currentStatus = statusBadge.textContent;
+        if (currentStatus.includes('bot') || currentStatus.includes('human')) {
+          // keep it, but we can add subtle hint
+        }
+      });
+    });
+
+    // init
+    resetForm(false);
+    setStatus('idle', 'Fill the form or click “Bot fill”');
+  })();
+</script>
+
+</body>
+</html>
